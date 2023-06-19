@@ -1,14 +1,24 @@
-pipeline {
-  agent any
-  stages {
-    stage('Dev Deployment') {
-      parallel {
-        stage('Dev Deployment') {
-          steps {
-            sh '''sshagent([\'dev-ssh-credentials\'])
+pipeline
+        {
+            agent any
+            
+                    environment
+                    {
+        
+                        DEV_SERVER_IP = '13.233.79.155';
+                        QA_SERVER_IP = '15.206.149.143';
+                        Azure_IP = '4.240.82.63';
+                    }
+                stages
+                {
+                    stage('Dev Deployment')
+                    {
+                        steps
+                        {
+                            sshagent(['dev-ssh-credentials'])
                             {
-                                   sh \'\'\'
-                                    ssh -o StrictHostKeyChecking=no ubuntu@${DEV_SERVER_IP} \'
+                                   sh '''
+                                    ssh -o StrictHostKeyChecking=no ubuntu@${DEV_SERVER_IP} '
                                    
                                         sudo fuser -k 80/tcp
                                    
@@ -23,32 +33,38 @@ pipeline {
                                             // And move to the nexus repo --> Ask your next server
                                         export COMMIT_ID = $(git rev-parse HEAD)
                                         nohup sudo mvn spring-boot:run > /dev/null 2>&1 & 
-                                    \'
-                                    \'\'\'
-                            }'''
-          }
-        }
-
-        stage('Run Health check') {
-          steps {
-            sh '''sshagent([\'dev-ssh-credentials\'])
+                                    '
+                                    '''
+                            }
+                   
+                        }
+                    }
+                   stage('Run Health check')
+                    {
+                        steps
+                        {
+                            sshagent(['dev-ssh-credentials'])
                             {
-                                   sh \'\'\'
-                                    ssh -o StrictHostKeyChecking=no ubuntu@${DEV_SERVER_IP} \'
+                                   sh '''
+                                    ssh -o StrictHostKeyChecking=no ubuntu@${DEV_SERVER_IP} '
                                     cd /home/ubuntu
                                     sh health-check_live.sh
-                                    \'
-                                    \'\'\'
-                            }'''
-          }
-        }
-
-        stage('smoke against Dev') {
-          steps {
-            sh '''sshagent([\'azure\'])
+                                    '
+                                    '''
+                            }
+                   
+                        }
+                    }
+                    
+                    
+                    stage('smoke against Dev')
+                    {
+                        steps
+                        {
+                            sshagent(['azure'])
                             {
-                                   sh \'\'\'
-                                    ssh -o StrictHostKeyChecking=no azureuser@${Azure_IP} \'
+                                   sh '''
+                                    ssh -o StrictHostKeyChecking=no azureuser@${Azure_IP} '
                                     
                                      # Update the package lists for upgrades and new package installations
                                     sudo apt-get update
@@ -71,18 +87,21 @@ pipeline {
                                     
                                     
                                     
-                                    \'
-                                    \'\'\'
-                            }'''
-          }
-        }
-
-        stage('QA Deployment') {
-          steps {
-            sh '''sshagent([\'dev-ssh-credentials\'])
+                                    '
+                                    '''
+                            }
+                   
+                        }
+                    }
+                 
+        stage('QA Deployment')
+        {
+            steps
+            {
+               sshagent(['dev-ssh-credentials'])
                {
-                   sh \'\'\'
-                   ssh -o StrictHostKeyChecking=no ubuntu@${QA_SERVER_IP} \'
+                   sh '''
+                   ssh -o StrictHostKeyChecking=no ubuntu@${QA_SERVER_IP} '
                    
                         sudo fuser -k 80/tcp
                    
@@ -97,18 +116,21 @@ pipeline {
                         
                         nohup sudo mvn spring-boot:run > /dev/null 2>&1 & 
                    
-                        \'
-                        \'\'\'
-               }'''
-          }
+                        '
+                        '''
+               }
+               
+            }
         }
-
-        stage('Regression Tests on QA') {
-          steps {
-            sh '''sshagent([\'azure\'])
+        
+        stage('Regression Tests on QA')
+                    {
+                        steps
+                        {
+                            sshagent(['azure'])
                             {
-                                   sh \'\'\'
-                                    ssh -o StrictHostKeyChecking=no azureuser@${Azure_IP} \'
+                                   sh '''
+                                    ssh -o StrictHostKeyChecking=no azureuser@${Azure_IP} '
                                     
                                      # Update the package lists for upgrades and new package installations
                                     sudo apt-get update
@@ -140,14 +162,15 @@ aws configure set output json
 aws s3api create-bucket --bucket regressionqq23 --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
 aws s3 sync reports/ s3://regressionqq23
                                     
-                                    \'
-                                    \'\'\'
-                            }'''
-          }
-        }
-
-      }
+                                    '
+                                    '''
+                            }
+                   
+                        }
+                    }
+        
+        
     }
-
-  }
+    
 }
+                                        
